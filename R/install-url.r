@@ -11,17 +11,17 @@
 #' @param ... Other arguments passed on to \code{\link{install}}.
 #' @export
 #' @family package installation
-install_url <- function(url, name = NULL, subdir = NULL, ...) {
+install_url <- function(url, name = NULL, subdir = NULL, binary=FALSE, ...) {
   if (is.null(name)) {
     name <- rep(list(NULL), length(url))
   }
   
-  invisible(mapply(install_url_single, url, name, 
-    MoreArgs = list(subdir = subdir, ...)))
+  invisible(mapply(install_url_single, url, name,
+    MoreArgs = list(subdir = subdir, binary = binary, ...)))
 }
 
 #' @importFrom httr GET config stop_for_status content
-install_url_single <- function(url, name = NULL, subdir = NULL, ...) {
+install_url_single <- function(url, name = NULL, binary=FALSE, subdir = NULL, ...) {
   if (is.null(name)) {
     name <- basename(url)
   }
@@ -49,7 +49,13 @@ install_url_single <- function(url, name = NULL, subdir = NULL, ...) {
   if (file.exists(config_path)) {
     Sys.chmod(config_path, "777")
   }
-  
+
   # Install
-  install(pkg_path, ...)
+  if (binary) {
+    install_binary(unbundle, bundle, ...)
+  } else {
+    install(pkg_path, ...)
+  }
 }
+
+

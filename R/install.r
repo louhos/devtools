@@ -26,6 +26,31 @@ install <- function(pkg = NULL, reload = TRUE, quick = FALSE, args = NULL) {
   
   built_path <- build(pkg, tempdir())
   on.exit(unlink(built_path))    
+    
+  opts <- c(
+    paste("--library=", shQuote(.libPaths()[1]), sep = ""),
+    "--with-keep.source")
+  if (quick) {
+    opts <- c(opts, "--no-docs", "--no-multiarch", "--no-demo")
+  }
+  opts <- paste(paste(opts, collapse = " "), paste(args, collapse = " "))
+  browser()
+  R(paste("CMD INSTALL ", shQuote(built_path), " ", opts, sep = ""))
+
+  if (reload) reload(pkg)
+  invisible(TRUE)
+}
+
+install_binary <- function(pkg_bundle = NULL, pkg_zip=NULL, reload = TRUE, quick = FALSE, 
+                           args = NULL) {
+  if (is.null(pkg_bundle)) {
+    pkg_bundle <- decompress(pkg_zip)
+    on.exit(unlink(pkg_bundle), add = TRUE)
+  }
+  
+  pkg <- as.package(pkg_bundle)
+  message("Installing ", pkg$package)
+  install_deps(pkg)  
   
   opts <- c(
     paste("--library=", shQuote(.libPaths()[1]), sep = ""),
@@ -34,9 +59,9 @@ install <- function(pkg = NULL, reload = TRUE, quick = FALSE, args = NULL) {
     opts <- c(opts, "--no-docs", "--no-multiarch", "--no-demo")
   }
   opts <- paste(paste(opts, collapse = " "), paste(args, collapse = " "))
-  
-  R(paste("CMD INSTALL ", shQuote(built_path), " ", opts, sep = ""))
 
+  R(paste("CMD INSTALL ", shQuote(pkg_zip), " ", opts, sep = ""))
+  
   if (reload) reload(pkg)
   invisible(TRUE)
 }
